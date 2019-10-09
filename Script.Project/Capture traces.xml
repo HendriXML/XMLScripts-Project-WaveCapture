@@ -121,7 +121,9 @@ ScopeRN=TCPIP0::scope::inst0::INSTR]]>
           <Block Condition="not FileExists(DirectoryPath + '\WaveForm.xsd')">
             <Variable Identifier="ScriptPath" Type="string" Init="ExtractFilePath(ScriptFilename)"/>
             <Variable Identifier="ResourceDirectory" Type="string" Init="GetFilenameFromBase(ScriptPath, '..\Resources.Project')"/>
-            <syu:CopyFile SourceFilename="ResourceDirectory + '\WaveForm.xsd'" TargetFilename="DirectoryPath + '\WaveForm.xsd'"/>
+            <Variable Identifier="SourceFilename" Type="string" Init="ExpandFileName(ResourceDirectory + '\WaveForm.xsd')"/>
+            <Variable Identifier="TargetFilename" Type="string" Init="ExpandFileName(DirectoryPath + '\WaveForm.xsd')"/>
+            <syu:CopyFile SourceFilename="SourceFilename" TargetFilename="TargetFilename"/>
           </Block>
 
         </Object.Use>
