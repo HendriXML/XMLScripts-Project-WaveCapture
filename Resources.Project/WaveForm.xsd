@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="WaveForm">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="Data">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element maxOccurs="unbounded" name="P">
+                <xs:complexType>
+                  <xs:attribute name="X" type="xs:double" use="required" />
+                  <xs:attribute name="Y" type="xs:double" use="required" />
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+            <xs:attribute name="VUnit" type="xs:string" use="required" />
+            <xs:attribute name="ProbeAttenuation" type="xs:unsignedByte" use="required" />
+            <xs:attribute name="VDiv" type="xs:double" use="required" />
+            <xs:attribute name="VOffset" type="xs:double" use="required" />
+            <xs:attribute name="HDiv" type="xs:double" use="required" />
+            <xs:attribute name="HOffset" type="xs:double" use="required" />
+            <xs:attribute name="NominalBits" type="xs:unsignedByte" use="required" />
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
