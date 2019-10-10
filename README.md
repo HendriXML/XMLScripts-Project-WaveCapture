@@ -1,6 +1,8 @@
 # XMLScripts-Project-WaveCapture
 Automated wave capture for Siglent SDS1104X-E and SDS1204X-E Mixed Signal Oscilloscopes. The captured traces are written in seperate XML files and can easily be imported in Excel.
 
+The scripts are not intended for critical usage - always asume it can be buggy.
+
 To get this repository with all its submodules the following command might be of use 
 
 git clone --recurse-submodules https://github.com/HendriXML/XMLScripts-Project-WaveCapture.git C:\WaveCapture
