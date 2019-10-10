@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Configuration>
+  <VGpu>Disable</VGpu>
+  <Networking>Enable</Networking>
+  <MappedFolders>
+    <MappedFolder>
+      <HostFolder>C:\WaveCapture</HostFolder>
+      <ReadOnly>false</ReadOnly>
+    </MappedFolder>
+    <MappedFolder>
+      <HostFolder>C:\WaveCaptureDemo</HostFolder>
+      <ReadOnly>false</ReadOnly>
+    </MappedFolder>
+  </MappedFolders>
+  <LogonCommand>
+    <Command>C:\Users\WDAGUtilityAccount\Desktop\WaveCaptureDemo\Executable\XMLScriptInterpreter.exe "C:\Users\WDAGUtilityAccount\Desktop\WaveCaptureDemo\Script.Project\Capture traces.xml"</Command>
+  </LogonCommand>
+</Configuration>
