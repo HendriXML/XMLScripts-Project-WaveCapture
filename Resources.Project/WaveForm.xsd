@@ -10,6 +10,8 @@
                 <xs:complexType>
                   <xs:attribute name="X" type="xs:double" use="required" />
                   <xs:attribute name="Y" type="xs:double" use="required" />
+                  <xs:attribute name="Y.min" type="xs:double" use="optional" />
+                  <xs:attribute name="Y.max" type="xs:double" use="optional" />
                 </xs:complexType>
               </xs:element>
             </xs:sequence>
@@ -19,7 +21,9 @@
             <xs:attribute name="VOffset" type="xs:double" use="required" />
             <xs:attribute name="HDiv" type="xs:double" use="required" />
             <xs:attribute name="HOffset" type="xs:double" use="required" />
-            <xs:attribute name="NominalBits" type="xs:unsignedByte" use="required" />
+            <xs:attribute name="VFactor" type="xs:double" use="optional" />
+            <xs:attribute name="NominalBits" type="xs:unsignedByte" use="optional" />
+            <xs:attribute name="Count" type="xs:unsignedInt" use="optional" />
           </xs:complexType>
         </xs:element>
       </xs:sequence>
