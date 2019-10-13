@@ -13,4 +13,12 @@ What's needed to use this script?
 * Ethernet/Wifi connection on Scope (Using the above with USB fails)
 * Interpreter executable (64 bit Windows, developed by me)
 * Script + Script libraries
-* XML editor to alter some values (for example an offset to get the first batch in view, scopes ip-adress). I really like the free Visual Studio Community for that.
+
+## Capture traces.xml
+Captures the scopes current acquisition.
+
+## Capture averaged traces.xml
+Captures the scopes current multisegment acquisition and averages the multiple cycles.
+This can take a while when using a lot of segments or a lot of wavepoints.
+
+
