@@ -45,7 +45,6 @@ ScopeRN=TCPIP0::scope::inst0::INSTR]]>
   </Uses>
 
   <Variables>
-    <Variable Identifier="ResourceManager" Type="IResourceManager3" Init="CoResourceManager.Create"/>
     <Variable Identifier="ScopeRN" Type="string" Init="'TCPIP0::scope::inst0::INSTR'"/>
     <Variable Identifier="OutputDirectory" Type="string" Init="'C:\Traces'"/>
     <Variable Identifier="Scope" Type="TSiglentSDS1104X"/>
@@ -82,21 +81,6 @@ ScopeRN=TCPIP0::scope::inst0::INSTR]]>
       </Block>
     </Procedure>
 
-    <Function Identifier="GetVisaSession" Type="IVisaSession">
-      <Parameters>
-        <Parameter Identifier="DeviceName" Type="string"/>
-      </Parameters>
-      <Block>
-        <Execute Statement="Result:= IntNil"/>
-        <Variable Identifier="RetValue"/>
-        <RepeatUntilLoop Expression="Assigned(Result)">
-          <Execute Statement="RetValue:= ResourceManager.Open(DeviceName, TAccessMode.NO_LOCK, 1000, '', Result)"/>
-          <rep:Reporter.Information Text="Format('RetValue: %d', RetValue)" Condition="IsDebugging"/>
-          <ExitOnAbortRequest/>
-        </RepeatUntilLoop>
-      </Block>
-    </Function>
-
     <Procedure Identifier="WaveCapureToFile">
       <Parameters>
         <Parameter Identifier="Trace" Type="TTraceType"/>
@@ -121,40 +105,43 @@ ScopeRN=TCPIP0::scope::inst0::INSTR]]>
         <Execute Statement="ReadConfig"/>
         <rep:Reporter.Information Text="''"/>
 
-        <Variable Identifier="ScopeVS" Type="IVisaSession" Init="GetVisaSession(ScopeRN)"/>
         <ExitOnAbortRequest/>
-        <Object.Use Identifier="Scope" Type="TSiglentSDS1104X" Expression="TSiglentSDS1104X.Create(ScopeVS)" LocalVariable="false">
-          <Object.Use Identifier="SaveOptions" Type="TSaveRawSamplesOptions" Expression="TSaveRawSamplesOptions.Create" LocalVariable="false">
-            <rep:Reporter.Information Text="'Capturing waveforms'" Markup="Header2"/>
-            <rep:Reporter.Information Text="Scope.IDN"/>
-            <rep:Reporter.Information Text="''"/>
-            <Execute Statement="Scope.CommHeader:= THeaderType.Off"/>
-            <Execute Statement="SaveOptions.DiscardExtremesPercentage:= 0"/>
-            <Execute Statement="SaveOptions.WriteMinValue:= True"/>
-            <Execute Statement="SaveOptions.WriteMaxValue:= True"/>
-            <Variable Identifier="DirectoryPath" Type="string" Init="ExcludeTrailingPathDelimiter(OutputDirectory)"/>
-            <syu:CreateDirectory Path="DirectoryPath"/>
-            <Execute Statement="Scope.ScreenCapureToFile(DirectoryPath + '\Screen capture.png', TImageType.PNG)"/>
-            <Execute Statement="Scope.HistoryMode:= False"/>
-            <Execute Statement="Scope.HistoryMode:= True"/>
-            <Execute Statement="FrameHighIndex:= Scope.ActiveFrame"/>
-            <Execute Statement="WaveCapureToFile(TTraceType.CH1, DirectoryPath + '\CH1.xml')" Condition="Scope.Enabled[THWTraceType.CH1]"/>
-            <ExitOnAbortRequest/>
-            <Execute Statement="WaveCapureToFile(TTraceType.CH2, DirectoryPath + '\CH2.xml')" Condition="Scope.Enabled[THWTraceType.CH2]"/>
-            <ExitOnAbortRequest/>
-            <Execute Statement="WaveCapureToFile(TTraceType.CH3, DirectoryPath + '\CH3.xml')" Condition="Scope.Enabled[THWTraceType.CH3]"/>
-            <ExitOnAbortRequest/>
-            <Execute Statement="WaveCapureToFile(TTraceType.CH4, DirectoryPath + '\CH4.xml')" Condition="Scope.Enabled[THWTraceType.CH4]"/>
-            <ExitOnAbortRequest/>
+        <Object.Use Identifier="VisaRM" Type="TVisaResourceManager" Expression="TVisaResourceManager.Create">
+          <Object.Use Identifier="ScopeSession" Type="TVisaResource" Expression="VisaRM.OpenResource(ScopeRN, TAccessMode.NO_LOCK, 1000)">
+            <Object.Use Identifier="Scope" Type="TSiglentSDS1104X" Expression="TSiglentSDS1104X.Create(ScopeSession)" LocalVariable="false">
+              <Object.Use Identifier="SaveOptions" Type="TSaveRawSamplesOptions" Expression="TSaveRawSamplesOptions.Create" LocalVariable="false">
+                <rep:Reporter.Information Text="'Capturing waveforms'" Markup="Header2"/>
+                <rep:Reporter.Information Text="Scope.IDN"/>
+                <rep:Reporter.Information Text="''"/>
+                <Execute Statement="Scope.CommHeader:= THeaderType.Off"/>
+                <Execute Statement="SaveOptions.DiscardExtremesPercentage:= 0"/>
+                <Execute Statement="SaveOptions.WriteMinValue:= True"/>
+                <Execute Statement="SaveOptions.WriteMaxValue:= True"/>
+                <Variable Identifier="DirectoryPath" Type="string" Init="ExcludeTrailingPathDelimiter(OutputDirectory)"/>
+                <syu:CreateDirectory Path="DirectoryPath"/>
+                <Execute Statement="Scope.ScreenCapureToFile(DirectoryPath + '\Screen capture.png', TImageType.PNG)"/>
+                <Execute Statement="Scope.HistoryMode:= False"/>
+                <Execute Statement="Scope.HistoryMode:= True"/>
+                <Execute Statement="FrameHighIndex:= Scope.ActiveFrame"/>
+                <Execute Statement="WaveCapureToFile(TTraceType.CH1, DirectoryPath + '\CH1.xml')" Condition="Scope.Enabled[THWTraceType.CH1]"/>
+                <ExitOnAbortRequest/>
+                <Execute Statement="WaveCapureToFile(TTraceType.CH2, DirectoryPath + '\CH2.xml')" Condition="Scope.Enabled[THWTraceType.CH2]"/>
+                <ExitOnAbortRequest/>
+                <Execute Statement="WaveCapureToFile(TTraceType.CH3, DirectoryPath + '\CH3.xml')" Condition="Scope.Enabled[THWTraceType.CH3]"/>
+                <ExitOnAbortRequest/>
+                <Execute Statement="WaveCapureToFile(TTraceType.CH4, DirectoryPath + '\CH4.xml')" Condition="Scope.Enabled[THWTraceType.CH4]"/>
+                <ExitOnAbortRequest/>
 
-            <Block Condition="not FileExists(DirectoryPath + '\WaveForm.xsd')">
-              <Variable Identifier="ScriptPath" Type="string" Init="ExtractFilePath(ScriptFilename)"/>
-              <Variable Identifier="ResourceDirectory" Type="string" Init="GetFilenameFromBase(ScriptPath, '..\Resources.Project')"/>
-              <Variable Identifier="SourceFilename" Type="string" Init="ExpandFileName(ResourceDirectory + '\WaveForm.xsd')"/>
-              <Variable Identifier="TargetFilename" Type="string" Init="ExpandFileName(DirectoryPath + '\WaveForm.xsd')"/>
-              <syu:CopyFile SourceFilename="SourceFilename" TargetFilename="TargetFilename"/>
-            </Block>
+                <Block Condition="not FileExists(DirectoryPath + '\WaveForm.xsd')">
+                  <Variable Identifier="ScriptPath" Type="string" Init="ExtractFilePath(ScriptFilename)"/>
+                  <Variable Identifier="ResourceDirectory" Type="string" Init="GetFilenameFromBase(ScriptPath, '..\Resources.Project')"/>
+                  <Variable Identifier="SourceFilename" Type="string" Init="ExpandFileName(ResourceDirectory + '\WaveForm.xsd')"/>
+                  <Variable Identifier="TargetFilename" Type="string" Init="ExpandFileName(DirectoryPath + '\WaveForm.xsd')"/>
+                  <syu:CopyFile SourceFilename="SourceFilename" TargetFilename="TargetFilename"/>
+                </Block>
 
+              </Object.Use>
+            </Object.Use>
           </Object.Use>
         </Object.Use>
       </Block>
