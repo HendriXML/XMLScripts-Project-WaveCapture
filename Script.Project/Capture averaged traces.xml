@@ -18,7 +18,8 @@
   xmlns:sim="urn:schemas-www-wisware.nl-xmlscripting-simulateuserinput"
   >
   <pkg:ReportTargets>
-    <pkg:Target Identifier="Default"/>
+    <pkg:Target Identifier="Default" Description="Report"/>
+    <pkg:Target Identifier="Visa" Description="Visa report"/>
   </pkg:ReportTargets>
   <pkg:Config>
     <![CDATA[
@@ -87,12 +88,18 @@ ScopeRN=TCPIP0::scope::inst0::INSTR]]>
         <Parameter Identifier="Filename" Type="string"/>
       </Parameters>
       <Block>
-        <rep:Reporter.Information Text="Format('Capturing %s to &quot;%s&quot;', Scope.TraceID[Trace], Filename)"/>
-        <Object.Use Identifier="DSOSamples" Type="TMultiFrameAcquisitionInfo" Expression="Scope.GetMultiFrameSamples(Trace, FrameHighIndex, ObjNil)">
-          <ExitOnAbortRequest/>
-          <Execute Statement="SaveRawSamplesToFile(DSOSamples, Filename, SaveOptions)"/>
-        </Object.Use>
-        <rep:Reporter.Information Text="''"/>
+        <Variable Identifier="TraceIDStr" Type="string" Init="Scope.TraceID[Trace]"/>
+        <sts:Status.Block Text="Format('Capturing %s to &quot;%s&quot;', TraceIDStr, Filename)" LeaveText="Format('Done capturing %s to &quot;%s&quot;', TraceIDStr, Filename)">
+          <rep:Reporter.Information Text="Format('Capturing %s to &quot;%s&quot;', TraceIDStr, Filename)"/>
+          <Object.Use Identifier="DSOSamples" Type="TMultiFrameAcquisitionInfo" Expression="Scope.GetMultiFrameSamples(Trace, FrameHighIndex, ObjNil)">
+            <ExitOnAbortRequest/>
+            <sts:Status.Block Text="Format('Saving to &quot;%s&quot;', Filename)" LeaveText="Format('Done saving to &quot;%s&quot;', Filename)">
+              <Execute Statement="SaveRawSamplesToFile(DSOSamples, Filename, SaveOptions)"/>
+              <rep:Reporter.Information Text="'File saved'"/>
+              <rep:Reporter.Information Text="''"/>
+            </sts:Status.Block>
+          </Object.Use>
+        </sts:Status.Block>
       </Block>
     </Procedure>
 
@@ -111,7 +118,7 @@ ScopeRN=TCPIP0::scope::inst0::INSTR]]>
             <Object.Use Identifier="Scope" Type="TSiglentSDS1104X" Expression="TSiglentSDS1104X.Create(ScopeSession)" LocalVariable="false">
               <Object.Use Identifier="SaveOptions" Type="TSaveRawSamplesOptions" Expression="TSaveRawSamplesOptions.Create" LocalVariable="false">
                 <rep:Reporter.Information Text="'Capturing waveforms'" Markup="Header2"/>
-                <rep:Reporter.Information Text="Scope.IDN"/>
+                <rep:Reporter.Information Text="'Using ' + Scope.IDN"/>
                 <rep:Reporter.Information Text="''"/>
                 <Execute Statement="Scope.CommHeader:= THeaderType.Off"/>
                 <Execute Statement="SaveOptions.DiscardExtremesPercentage:= 0"/>
@@ -120,6 +127,7 @@ ScopeRN=TCPIP0::scope::inst0::INSTR]]>
                 <Variable Identifier="DirectoryPath" Type="string" Init="ExcludeTrailingPathDelimiter(OutputDirectory)"/>
                 <syu:CreateDirectory Path="DirectoryPath"/>
                 <Execute Statement="Scope.ScreenCapureToFile(DirectoryPath + '\Screen capture.png', TImageType.PNG)"/>
+                <ExitOnAbortRequest/>
                 <Execute Statement="Scope.HistoryMode:= False"/>
                 <Execute Statement="Scope.HistoryMode:= True"/>
                 <Execute Statement="FrameHighIndex:= Scope.ActiveFrame"/>
@@ -149,6 +157,9 @@ ScopeRN=TCPIP0::scope::inst0::INSTR]]>
   </Procedures>
 
   <Block>
-    <Execute Statement="Execute"/>
+    <sts:Status.Block Text="'Executing script'" LeaveText="'Done executing script'">
+      <Execute Statement="DoReportVisa:= IsDebugging"/>
+      <Execute Statement="Execute"/>
+    </sts:Status.Block>
   </Block>
 </pkg:Program>
