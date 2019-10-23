@@ -1,9 +1,9 @@
 [submodule "XmlSchemas.Common.XmlScript"]
 	path = XmlSchemas.Common.XmlScript
-	url = https://github.com/HendriXML/XMLSchemas-Common-XmlScript.git
+	url = ../XMLSchemas-Common-XmlScript.git
 [submodule "Script.Common.VISA"]
 	path = Script.Common.VISA
-	url = https://github.com/HendriXML/XMLScripts-Common-VISA.git
+	url = ../XMLScripts-Common-VISA.git
 [submodule "Executable"]
 	path = Executable
-	url = https://github.com/HendriXML/XMLScriptInterpreter.git
+	url = ../XMLScriptInterpreter.git
