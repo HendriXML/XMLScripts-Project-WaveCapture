@@ -7,3 +7,6 @@
 [submodule "Executable"]
 	path = Executable
 	url = ../XMLScriptInterpreter.git
+[submodule "Script.Common.Electronics"]
+	path = Script.Common.Electronics
+	url = ../XMLScripts-Common-Electronics.git
