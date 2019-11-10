@@ -46,7 +46,7 @@ ScopeRN=TCPIP0::scope::inst0::INSTR]]>
   </Uses>
 
   <Constants>
-    <Constant Identifier="ScriptVersion" Type="string" Expression="'5.2.272'"/>
+    <Constant Identifier="ScriptVersion" Type="string" Expression="'5.2.273'"/>
   </Constants>
 
   <Variables>
@@ -105,8 +105,9 @@ ScopeRN=TCPIP0::scope::inst0::INSTR]]>
       <Block>
         <rep:Reporter.Information Text="'Capture traces'" Markup="Header1"/>
         <rep:Reporter.Information Text="Format('Time: %s', FormatDateTime('', Now))"/>
-        <rep:Reporter.Information Text="Format('Filename: %s', ScriptFilename)"/>
+        <rep:Reporter.Information Text="Format('Interpreter version: %s', GetVersionInfo('%d.%d.%d'))"/>
         <rep:Reporter.Information Text="Format('Script version: %s', ScriptVersion)"/>
+        <rep:Reporter.Information Text="Format('Filename: %s', ScriptFilename)"/>
         <rep:Reporter.Information Text="Format('Reporting base directory: %s', ReportingBase)" Condition="not IsEmpty(ReportingBase)"/>
         <rep:Reporter.Information Text="''"/>
         <rep:Reporter.Information Text="'Config report'" Markup="Header2"/>
