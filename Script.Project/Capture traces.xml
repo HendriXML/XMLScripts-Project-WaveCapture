@@ -28,13 +28,15 @@
 ValidParameters=0
 
 [Config]
-OutputDirectory=C:\WaveCapture
+;Defaults to reporting directory
+;OutputDirectory=C:\WaveCapture
 
 [VISA]
 ;scope = dns, can be replace with ip-adress
 ScopeRN=TCPIP0::scope::inst0::INSTR]]>
   </pkg:Config>
   <Imports>
+    <Import Identifier="ElectronicUtils" Filename="..\Script.Common.Electronics\ElectronicUtils.xml"/>
     <Import Identifier="VISAInstrument" Filename="..\Script.Common.VISA\VISA Instrument.xml"/>
     <Import Identifier="SiglentSDS1104X" Filename="..\Script.Common.VISA\VISA Siglent SDS1104X.xml"/>
   </Imports>
@@ -42,6 +44,10 @@ ScopeRN=TCPIP0::scope::inst0::INSTR]]>
     <Use Identifier="VISAInstrument"/>
     <Use Identifier="SiglentSDS1104X"/>
   </Uses>
+
+  <Constants>
+    <Constant Identifier="ScriptVersion" Type="string" Expression="'5.2.271'"/>
+  </Constants>
 
   <Variables>
     <Variable Identifier="ScopeRN" Type="string" Init="'TCPIP0::scope::inst0::INSTR'"/>
@@ -66,7 +72,7 @@ ScopeRN=TCPIP0::scope::inst0::INSTR]]>
 
         <rep:Reporter.Information Text="''"/>
         <rep:Reporter.Information Text="Format('[%s]', secConfig)" Markup="Header3"/>
-        <Execute Statement="OutputDirectory:= ConfigInifile.ReadString(secConfig, keyOutputDirectory, OutputDirectory) "/>
+        <Execute Statement="OutputDirectory:= ConfigInifile.ReadString(secConfig, keyOutputDirectory, Coalesce(ReportingBase, OutputDirectory)) "/>
         <rep:Reporter.Information Text="Format('%s=%s', keyOutputDirectory, OutputDirectory)"/>
 
         <rep:Reporter.Information Text="''"/>
@@ -98,6 +104,10 @@ ScopeRN=TCPIP0::scope::inst0::INSTR]]>
     <Procedure Identifier="Execute">
       <Block>
         <rep:Reporter.Information Text="'Capture traces'" Markup="Header1"/>
+        <rep:Reporter.Information Text="Format('Time: %s', FormatDateTime('', Now))"/>
+        <rep:Reporter.Information Text="Format('Filename: %s', ScriptFilename)"/>
+        <rep:Reporter.Information Text="Format('Script version: %s', ScriptVersion)"/>
+        <rep:Reporter.Information Text="Format('Reporting base directory: %s', ReportingBase)" Condition="not IsEmpty(ReportingBase)"/>
         <rep:Reporter.Information Text="''"/>
         <rep:Reporter.Information Text="'Config report'" Markup="Header2"/>
         <rep:Reporter.Information Text="''"/>
@@ -106,31 +116,45 @@ ScopeRN=TCPIP0::scope::inst0::INSTR]]>
         <Object.Use Identifier="VisaRM" Type="TVisaResourceManager" Expression="TVisaResourceManager.Create">
           <Object.Use Identifier="ScopeSession" Type="TVisaResource" Expression="VisaRM.OpenResource(ScopeRN, TAccessMode.NO_LOCK, 1000)">
             <Object.Use Identifier="Scope" Type="TSiglentSDS1104X" Expression="TSiglentSDS1104X.Create(ScopeSession)" LocalVariable="false">
-              <rep:Reporter.Information Text="'Capturing waveforms'" Markup="Header2"/>
-              <rep:Reporter.Information Text="'Using ' + Scope.IDN"/>
-              <rep:Reporter.Information Text="''"/>
-              <Execute Statement="Scope.CommHeader:= THeaderType.Off"/>
+              <TryFinally>
+                <Try>
+                  <rep:Reporter.Information Text="'Capturing waveforms'" Markup="Header2"/>
+                  <rep:Reporter.Information Text="'Using ' + Scope.IDN"/>
+                  <rep:Reporter.Information Text="''"/>
+                  <Execute Statement="Scope.CommHeader:= THeaderType.Off"/>
 
-              <Variable Identifier="DirectoryPath" Type="string" Init="ExcludeTrailingPathDelimiter(OutputDirectory)"/>
-              <syu:CreateDirectory Path="DirectoryPath"/>
-              <Execute Statement="Scope.ScreenCapureToFile(DirectoryPath + '\Screen capture.png', TImageType.PNG)"/>
-              <ExitOnAbortRequest/>
-              <Execute Statement="WaveCapureToFile(TTraceType.CH1, DirectoryPath + '\CH1.xml')" Condition="Scope.Enabled[THWTraceType.CH1]"/>
-              <ExitOnAbortRequest/>
-              <Execute Statement="WaveCapureToFile(TTraceType.CH2, DirectoryPath + '\CH2.xml')" Condition="Scope.Enabled[THWTraceType.CH2]"/>
-              <ExitOnAbortRequest/>
-              <Execute Statement="WaveCapureToFile(TTraceType.CH3, DirectoryPath + '\CH3.xml')" Condition="Scope.Enabled[THWTraceType.CH3]"/>
-              <ExitOnAbortRequest/>
-              <Execute Statement="WaveCapureToFile(TTraceType.CH4, DirectoryPath + '\CH4.xml')" Condition="Scope.Enabled[THWTraceType.CH4]"/>
-              <ExitOnAbortRequest/>
+                  <Variable Identifier="DirectoryPath" Type="string" Init="IncludeTrailingPathDelimiter(OutputDirectory)"/>
+                  <syu:CreateDirectory Path="DirectoryPath"/>
+                  
+                  <Variable Identifier="ScreenCaptureFilename" Type="string" Init="DirectoryPath + 'Screen capture.png'"/>
+                  <rep:Reporter.Information Text="Format('Capturing screen to: %s', ScreenCaptureFilename)"/>
+                  <Execute Statement="Scope.ScreenCapureToFile(ScreenCaptureFilename, TImageType.PNG)"/>
+                  <ExitOnAbortRequest/>
+                  <rep:Reporter.Information Text="'File saved'"/>
+                  <rep:Reporter.Information Text="''"/>
+                  
+                  <Execute Statement="WaveCapureToFile(TTraceType.CH1, DirectoryPath + 'CH1.xml')" Condition="Scope.Enabled[THWTraceType.CH1]"/>
+                  <ExitOnAbortRequest/>
+                  <Execute Statement="WaveCapureToFile(TTraceType.CH2, DirectoryPath + 'CH2.xml')" Condition="Scope.Enabled[THWTraceType.CH2]"/>
+                  <ExitOnAbortRequest/>
+                  <Execute Statement="WaveCapureToFile(TTraceType.CH3, DirectoryPath + 'CH3.xml')" Condition="Scope.Enabled[THWTraceType.CH3]"/>
+                  <ExitOnAbortRequest/>
+                  <Execute Statement="WaveCapureToFile(TTraceType.CH4, DirectoryPath + 'CH4.xml')" Condition="Scope.Enabled[THWTraceType.CH4]"/>
+                  <ExitOnAbortRequest/>
 
-              <Block Condition="not FileExists(DirectoryPath + '\WaveForm.xsd')">
-                <Variable Identifier="ScriptPath" Type="string" Init="ExtractFilePath(ScriptFilename)"/>
-                <Variable Identifier="ResourceDirectory" Type="string" Init="GetFilenameFromBase(ScriptPath, '..\Resources.Project')"/>
-                <Variable Identifier="SourceFilename" Type="string" Init="ExpandFileName(ResourceDirectory + '\WaveForm.xsd')"/>
-                <Variable Identifier="TargetFilename" Type="string" Init="ExpandFileName(DirectoryPath + '\WaveForm.xsd')"/>
-                <syu:CopyFile SourceFilename="SourceFilename" TargetFilename="TargetFilename"/>
-              </Block>
+                  <Block Condition="not FileExists(DirectoryPath + 'WaveForm.xsd')">
+                    <Variable Identifier="ScriptPath" Type="string" Init="ExtractFilePath(ScriptFilename)"/>
+                    <Variable Identifier="ResourceDirectory" Type="string" Init="GetFilenameFromBase(ScriptPath, '..\Resources.Project')"/>
+                    <Variable Identifier="SourceFilename" Type="string" Init="ExpandFileName(ResourceDirectory + '\WaveForm.xsd')"/>
+                    <Variable Identifier="TargetFilename" Type="string" Init="ExpandFileName(DirectoryPath + 'WaveForm.xsd')"/>
+                    <syu:CopyFile SourceFilename="SourceFilename" TargetFilename="TargetFilename"/>
+                  </Block>
+                </Try>
+                <Finally>
+                  <rep:Reporter.Information Text="'Done'" Markup="Header2"/>
+                  <rep:Reporter.Information Text="Format('Time: %s', FormatDateTime('', Now))"/>
+                </Finally>
+              </TryFinally>
             </Object.Use>
           </Object.Use>
         </Object.Use>
@@ -139,9 +163,24 @@ ScopeRN=TCPIP0::scope::inst0::INSTR]]>
   </Procedures>
 
   <Block>
-    <sts:Status.Block Text="'Executing script'" LeaveText="'Done executing script'">
-      <Execute Statement="DoReportVisa:= IsDebugging"/>
-      <Execute Statement="Execute"/>
-    </sts:Status.Block>
+    <TryExcept>
+      <Try>
+        <sts:Status.Block Text="'Executing script'" LeaveText="'Done executing script'">
+          <Execute Statement="DoReportVisa:= IsDebugging"/>
+          <Execute Statement="Execute"/>
+        </sts:Status.Block>
+        <sts:Status Text="'Aborted script - reports are not saved automatically'" Condition="AbortRequest"/>
+      </Try>
+      <Except>
+        <On Identifier="E" ClassType="Exception">
+          <rep:Reporter.Error Text="Format('An exception of type %s was raised: %s', E.ClassName, E.Message)"/>
+          <sts:Status Text="'Failed executing script: ' + E.Message"/>
+          <Raise/>
+        </On>
+        <Otherwise>
+          <Raise/>
+        </Otherwise>
+      </Except>
+    </TryExcept>
   </Block>
 </pkg:Program>
