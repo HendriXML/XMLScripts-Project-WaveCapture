@@ -38,49 +38,37 @@ ScopeRN=TCPIP0::scope::inst0::INSTR]]>
   <Imports>
     <Import Identifier="ElectronicUtils" Filename="..\Script.Common.Electronics\ElectronicUtils.xml"/>
     <Import Identifier="VISAInstrument" Filename="..\Script.Common.VISA\VISA Instrument.xml"/>
-    <Import Identifier="SiglentSDS1104X" Filename="..\Script.Common.VISA\VISA Siglent SDS1104X.xml"/>
+    <Import Identifier="SiglentScopes" Filename="..\Script.Common.VISA\VISA Siglent Scopes.xml"/>
   </Imports>
   <Uses>
     <Use Identifier="VISAInstrument"/>
-    <Use Identifier="SiglentSDS1104X"/>
+    <Use Identifier="SiglentScopes"/>
   </Uses>
 
   <Constants>
-    <Constant Identifier="ScriptVersion" Type="string" Expression="'5.2.273'"/>
+    <Constant Identifier="ScriptVersion" Type="string" Expression="'5.2.279'"/>
   </Constants>
 
   <Variables>
     <Variable Identifier="ScopeRN" Type="string" Init="'TCPIP0::scope::inst0::INSTR'"/>
     <Variable Identifier="OutputDirectory" Type="string" Init="'C:\Traces'"/>
-    <Variable Identifier="Scope" Type="TSiglentSDS1104X"/>
+    <Variable Identifier="Scope" Type="TSiglentScope"/>
   </Variables>
 
   <Procedures>
     <Procedure Identifier="ReadConfig">
-      <Constants>
-        <Constant Identifier="secVISA" Type="string"  Expression="'VISA'"/>
-        <Constant Identifier="secCheck" Type="string"  Expression="'Check'"/>
-        <Constant Identifier="secConfig" Type="string"  Expression="'Config'"/>
-        <Constant Identifier="keyValidParameters" Type="string"  Expression="'ValidParameters'"/>
-        <Constant Identifier="keyOutputDirectory" Type="string"  Expression="'OutputDirectory'"/>
-        <Constant Identifier="keyScopeRN" Type="string"  Expression="'ScopeRN'"/>
-      </Constants>
       <Block>
-        <rep:Reporter.Information Text="Format('[%s]', secCheck)" Markup="Header3"/>
-        <Variable Identifier="ValidParameters" Type="Boolean" Init="ConfigInifile.ReadBool(secCheck, keyValidParameters, false)"/>
-        <rep:Reporter.Information Text="Format('%s=%s', keyValidParameters, IfElse(ValidParameters, '1', '0'))"/>
+        <Object.Use Identifier="Ini" Type="TIniHelper" Expression="TIniHelper.Create(ConfigInifile, True)">
+          <Execute Statement="Ini.Section('Check', False)"/>
+          <Variable Identifier="ValidParameters" Type="Boolean" Init="Ini.ReadBool('ValidParameters', False)"/>
 
-        <rep:Reporter.Information Text="''"/>
-        <rep:Reporter.Information Text="Format('[%s]', secConfig)" Markup="Header3"/>
-        <Execute Statement="OutputDirectory:= ConfigInifile.ReadString(secConfig, keyOutputDirectory, Coalesce(ReportingBase, OutputDirectory)) "/>
-        <rep:Reporter.Information Text="Format('%s=%s', keyOutputDirectory, OutputDirectory)"/>
+          <Execute Statement="Ini.Section('Config')"/>
+          <Execute Statement="OutputDirectory:= Ini.ReadString('OutputDirectory', Coalesce(ReportingBase, OutputDirectory)) "/>
 
-        <rep:Reporter.Information Text="''"/>
-        <rep:Reporter.Information Text="Format('[%s]', secVISA)" Markup="Header3"/>
-        <Execute Statement="ScopeRN:= ConfigInifile.ReadString(secVISA, keyScopeRN, ScopeRN) "/>
-        <rep:Reporter.Information Text="Format('%s=%s', keyScopeRN, ScopeRN)"/>
-
-        <Raise Expression="Exception.Create('Please check the config and set validparameters=1')" Condition="not ValidParameters"/>
+          <Execute Statement="Ini.Section('VISA')"/>
+          <Execute Statement="ScopeRN:= Ini.ReadString('ScopeRN', ScopeRN) "/>
+          <Raise Expression="Exception.Create('Please check the config and set validparameters=1')" Condition="not ValidParameters"/>
+        </Object.Use>
       </Block>
     </Procedure>
 
@@ -90,9 +78,9 @@ ScopeRN=TCPIP0::scope::inst0::INSTR]]>
         <Parameter Identifier="Filename" Type="string"/>
       </Parameters>
       <Block>
-        <Variable Identifier="TraceIDStr" Type="string" Init="Scope.TraceID[Trace]"/>
-        <sts:Status.Block Text="Format('Capturing %s to &quot;%s&quot;', TraceIDStr, Filename)" LeaveText="Format('Done capturing %s to &quot;%s&quot;', TraceIDStr, Filename)">
-          <rep:Reporter.Information Text="Format('Capturing %s to &quot;%s&quot;', TraceIDStr, Filename)"/>
+        <Variable Identifier="TraceName" Type="string" Init="Scope.TraceTypeName(Trace)"/>
+        <sts:Status.Block Text="Format('Capturing %s to &quot;%s&quot;', TraceName, Filename)" LeaveText="Format('Done capturing %s to &quot;%s&quot;', TraceName, Filename)">
+          <rep:Reporter.Information Text="Format('Capturing %s to &quot;%s&quot;', TraceName, Filename)"/>
           <Execute Statement="Scope.WaveCapureToFile(Trace, Filename)"/>
           <rep:Reporter.Information Text="'File saved'"/>
           <rep:Reporter.Information Text="''"/>
@@ -116,7 +104,7 @@ ScopeRN=TCPIP0::scope::inst0::INSTR]]>
         <rep:Reporter.Information Text="''"/>
         <Object.Use Identifier="VisaRM" Type="TVisaResourceManager" Expression="TVisaResourceManager.Create">
           <Object.Use Identifier="ScopeSession" Type="TVisaResource" Expression="VisaRM.OpenResource(ScopeRN, TAccessMode.NO_LOCK, 1000)">
-            <Object.Use Identifier="Scope" Type="TSiglentSDS1104X" Expression="TSiglentSDS1104X.Create(ScopeSession)" LocalVariable="false">
+            <Object.Use Identifier="Scope" Type="TSiglentScope" Expression="TSiglentScope.MatchingClass(ScopeSession).Create(ScopeSession)" LocalVariable="false">
               <TryFinally>
                 <Try>
                   <rep:Reporter.Information Text="'Capturing waveforms'" Markup="Header2"/>
@@ -126,21 +114,21 @@ ScopeRN=TCPIP0::scope::inst0::INSTR]]>
 
                   <Variable Identifier="DirectoryPath" Type="string" Init="IncludeTrailingPathDelimiter(OutputDirectory)"/>
                   <syu:CreateDirectory Path="DirectoryPath"/>
-                  
+
                   <Variable Identifier="ScreenCaptureFilename" Type="string" Init="DirectoryPath + 'Screen capture.png'"/>
                   <rep:Reporter.Information Text="Format('Capturing screen to: %s', ScreenCaptureFilename)"/>
                   <Execute Statement="Scope.ScreenCapureToFile(ScreenCaptureFilename, TImageType.PNG)"/>
                   <ExitOnAbortRequest/>
                   <rep:Reporter.Information Text="'File saved'"/>
                   <rep:Reporter.Information Text="''"/>
-                  
-                  <Execute Statement="WaveCapureToFile(TTraceType.CH1, DirectoryPath + 'CH1.xml')" Condition="Scope.Enabled[THWTraceType.CH1]"/>
+
+                  <Execute Statement="WaveCapureToFile(TTraceType.CH1, DirectoryPath + 'CH1.xml')" Condition="Scope.SupportsTrace(TTraceType.CH1) and Scope.Enabled[TTraceType.CH1]"/>
                   <ExitOnAbortRequest/>
-                  <Execute Statement="WaveCapureToFile(TTraceType.CH2, DirectoryPath + 'CH2.xml')" Condition="Scope.Enabled[THWTraceType.CH2]"/>
+                  <Execute Statement="WaveCapureToFile(TTraceType.CH2, DirectoryPath + 'CH2.xml')" Condition="Scope.SupportsTrace(TTraceType.CH2) and Scope.Enabled[TTraceType.CH2]"/>
                   <ExitOnAbortRequest/>
-                  <Execute Statement="WaveCapureToFile(TTraceType.CH3, DirectoryPath + 'CH3.xml')" Condition="Scope.Enabled[THWTraceType.CH3]"/>
+                  <Execute Statement="WaveCapureToFile(TTraceType.CH3, DirectoryPath + 'CH3.xml')" Condition="Scope.SupportsTrace(TTraceType.CH3) and Scope.Enabled[TTraceType.CH3]"/>
                   <ExitOnAbortRequest/>
-                  <Execute Statement="WaveCapureToFile(TTraceType.CH4, DirectoryPath + 'CH4.xml')" Condition="Scope.Enabled[THWTraceType.CH4]"/>
+                  <Execute Statement="WaveCapureToFile(TTraceType.CH4, DirectoryPath + 'CH4.xml')" Condition="Scope.SupportsTrace(TTraceType.CH4) and Scope.Enabled[TTraceType.CH4]"/>
                   <ExitOnAbortRequest/>
 
                   <Block Condition="not FileExists(DirectoryPath + 'WaveForm.xsd')">
