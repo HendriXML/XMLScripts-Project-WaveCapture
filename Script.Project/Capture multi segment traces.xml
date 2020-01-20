@@ -28,11 +28,13 @@ ValidParameters=0
 [Config]
 ;Defaults to reporting directory
 ;OutputDirectory=C:\WaveCapture
-GenerateTestSignal=1
+GenerateTestSignal=0
 
 [VISA]
 ;scope = dns, can be replace with ip-adress
 ScopeRN=TCPIP0::scope::inst0::INSTR
+;Only needed if GenerateTestSignal=1
+AwgRN=TCPIP0::awg::inst0::INSTR
 
 [DigitalSignal]
 VoltageLow=0 V
@@ -55,13 +57,14 @@ MaxFallTime= 50 ns
   </Uses>
 
   <Constants>
-    <Constant Identifier="ScriptVersion" Type="string" Expression="'5.4.288'"/>
+    <Constant Identifier="ScriptVersion" Type="string" Expression="'5.4.289'"/>
   </Constants>
 
   <Variables>
     <Variable Identifier="ucVolt" Type="TUnitConvertor" Init="TUnitConvertor.Create(TGranularity.Pico, TSiUnit.Volt)"/>
     <Variable Identifier="ucTime" Type="TUnitConvertor" Init="TUnitConvertor.Create(TGranularity.Pico, TSiUnit.Second)"/>
     <Variable Identifier="ScopeRN" Type="string" Init="'TCPIP0::scope::inst0::INSTR'"/>
+    <Variable Identifier="AwgRN" Type="string" Init="'TCPIP0::awg::inst0::INSTR'"/>
     <Variable Identifier="OutputDirectory" Type="string" Init="'C:\Traces'"/>
     <Variable Identifier="Scope" Type="TSiglentScope"/>
     <Variable Identifier="convDigitalSignalVoltageLow" Type="ConvInt"/>
@@ -84,6 +87,7 @@ MaxFallTime= 50 ns
 
           <Execute Statement="Ini.Section('VISA')"/>
           <Execute Statement="ScopeRN:= Ini.ReadString('ScopeRN', ScopeRN) "/>
+          <Execute Statement="AwgRN:= Ini.ReadString('AwgRN', AwgRN) "/>
 
           <Execute Statement="Ini.Section('DigitalSignal')"/>
           <Execute Statement="convDigitalSignalVoltageLow:= Ini.ReadConvInt('VoltageLow', ucVolt, '0 V')"/>
@@ -235,7 +239,6 @@ MaxFallTime= 50 ns
                   <Execute Statement="Scope.CommHeader:= THeaderType.Off"/>
 
                   <sts:Status.Block Text="'Activating test signal'" LeaveText="'Done activating test signal'" Condition="GenerateTestsignal">
-                    <Variable Identifier="AwgRN" Type="string" Init="'TCPIP0::awg::inst0::INSTR'"/>
                     <Object.Use Identifier="AwgSession" Type="TVisaResource" Expression="VisaRM.OpenResource(AwgRN, TAccessMode.No_Lock, 10000)">
                       <Object.Use Identifier="Awg" Type="TSiglentSDG1000X" Expression="TSiglentSDG1000X.Create(AwgSession)">
                         <Execute Statement="Awg.WriteString('C1:BSWV WVTP,PULSE,FRQ,500HZ,AMP,5V,AMPVRMS,2.5Vrms,OFST,2.5V,HLEV,5V,LLEV,0V,WIDTH,0.0000001,RISE,3e-08S,FALL,3e-08S,DLY,0')"/>
