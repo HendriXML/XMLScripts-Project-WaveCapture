@@ -27,7 +27,7 @@ ValidParameters=0
 
 [Config]
 ;Defaults to reporting directory
-OutputDirectory=C:\WaveCapture
+;OutputDirectory=C:\WaveCapture
 GenerateTestSignal=1
 
 [VISA]
@@ -55,7 +55,7 @@ MaxFallTime= 50 ns
   </Uses>
 
   <Constants>
-    <Constant Identifier="ScriptVersion" Type="string" Expression="'5.4.286'"/>
+    <Constant Identifier="ScriptVersion" Type="string" Expression="'5.4.288'"/>
   </Constants>
 
   <Variables>
