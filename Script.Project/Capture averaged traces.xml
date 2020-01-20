@@ -48,7 +48,7 @@ ScopeRN=TCPIP0::scope::inst0::INSTR]]>
   </Uses>
 
   <Constants>
-    <Constant Identifier="ScriptVersion" Type="string" Expression="'5.2.279'"/>
+    <Constant Identifier="ScriptVersion" Type="string" Expression="'5.4.286'"/>
   </Constants>
 
   <Variables>

@@ -46,7 +46,7 @@ ScopeRN=TCPIP0::scope::inst0::INSTR]]>
   </Uses>
 
   <Constants>
-    <Constant Identifier="ScriptVersion" Type="string" Expression="'5.2.279'"/>
+    <Constant Identifier="ScriptVersion" Type="string" Expression="'5.4.286'"/>
   </Constants>
 
   <Variables>
@@ -81,7 +81,7 @@ ScopeRN=TCPIP0::scope::inst0::INSTR]]>
         <Variable Identifier="TraceName" Type="string" Init="Scope.TraceTypeName(Trace)"/>
         <sts:Status.Block Text="Format('Capturing %s to &quot;%s&quot;', TraceName, Filename)" LeaveText="Format('Done capturing %s to &quot;%s&quot;', TraceName, Filename)">
           <rep:Reporter.Information Text="Format('Capturing %s to &quot;%s&quot;', TraceName, Filename)"/>
-          <Execute Statement="Scope.WaveCapureToFile(Trace, Filename)"/>
+          <Execute Statement="Scope.WaveCapureToFile(Trace, ObjNil, Filename)"/>
           <rep:Reporter.Information Text="'File saved'"/>
           <rep:Reporter.Information Text="''"/>
         </sts:Status.Block>
