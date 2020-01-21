@@ -48,7 +48,7 @@ ScopeRN=TCPIP0::scope::inst0::INSTR]]>
   </Uses>
 
   <Constants>
-    <Constant Identifier="ScriptVersion" Type="string" Expression="'5.4.286'"/>
+    <Constant Identifier="ScriptVersion" Type="string" Expression="'5.4.290'"/>
   </Constants>
 
   <Variables>
@@ -128,6 +128,14 @@ ScopeRN=TCPIP0::scope::inst0::INSTR]]>
                     <Variable Identifier="DirectoryPath" Type="string" Init="IncludeTrailingPathDelimiter(OutputDirectory)"/>
                     <syu:CreateDirectory Path="DirectoryPath"/>
 
+                    <Block Condition="not FileExists(DirectoryPath + '\WaveForm.xsd')">
+                      <Variable Identifier="ScriptPath" Type="string" Init="ExtractFilePath(ScriptFilename)"/>
+                      <Variable Identifier="ResourceDirectory" Type="string" Init="GetFilenameFromBase(ScriptPath, '..\XmlSchemas.Common.VISA')"/>
+                      <Variable Identifier="SourceFilename" Type="string" Init="ExpandFileName(ResourceDirectory + '\WaveForm.xsd')"/>
+                      <Variable Identifier="TargetFilename" Type="string" Init="ExpandFileName(DirectoryPath + 'WaveForm.xsd')"/>
+                      <syu:CopyFile SourceFilename="SourceFilename" TargetFilename="TargetFilename"/>
+                    </Block>
+
                     <Variable Identifier="ScreenCaptureFilename" Type="string" Init="DirectoryPath + 'Screen capture.png'"/>
                     <rep:Reporter.Information Text="Format('Capturing screen to: %s', ScreenCaptureFilename)"/>
                     <Execute Statement="Scope.ScreenCapureToFile(ScreenCaptureFilename, TImageType.PNG)"/>
@@ -144,14 +152,6 @@ ScopeRN=TCPIP0::scope::inst0::INSTR]]>
                     <ExitOnAbortRequest/>
                     <Execute Statement="WaveCapureToFile(TTraceType.CH4, DirectoryPath + 'CH4.xml')" Condition="Scope.SupportsTrace(TTraceType.CH4) and Scope.Enabled[TTraceType.CH4]"/>
                     <ExitOnAbortRequest/>
-
-                    <Block Condition="not FileExists(DirectoryPath + '\WaveForm.xsd')">
-                      <Variable Identifier="ScriptPath" Type="string" Init="ExtractFilePath(ScriptFilename)"/>
-                      <Variable Identifier="ResourceDirectory" Type="string" Init="GetFilenameFromBase(ScriptPath, '..\Resources.Project')"/>
-                      <Variable Identifier="SourceFilename" Type="string" Init="ExpandFileName(ResourceDirectory + '\WaveForm.xsd')"/>
-                      <Variable Identifier="TargetFilename" Type="string" Init="ExpandFileName(DirectoryPath + 'WaveForm.xsd')"/>
-                      <syu:CopyFile SourceFilename="SourceFilename" TargetFilename="TargetFilename"/>
-                    </Block>
                   </Try>
                   <Finally>
                     <rep:Reporter.Information Text="'Done'" Markup="Header2"/>

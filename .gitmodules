@@ -10,3 +10,6 @@
 [submodule "Script.Common.Electronics"]
 	path = Script.Common.Electronics
 	url = ../XMLScripts-Common-Electronics.git
+[submodule "XmlSchemas.Common.VISA"]
+	path = XmlSchemas.Common.VISA
+	url = ../XMLSchemas-Common-VISA.git
